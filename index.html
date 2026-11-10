@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>타고 타고 옛날 여행 퀴즈</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* Layout: one centered "travel ticket" card, one screen at a time; big tap targets for 3rd graders */
+:root {
+  --bg: #e8f2f7;
+  --bg-deep: #d3e6ef;
+  --card: #ffffff;
+  --ink: #23324f;
+  --ink-soft: #5a6a85;
+  --line: #c9d7e2;
+  --accent: #1f6f8b;        /* 강물 파랑 */
+  --accent-ink: #ffffff;
+  --sun: #f2b53a;           /* 햇살 노랑 */
+  --wood: #a86b3c;
+  --wood-dark: #6f4325;
+  --red: #c8473b;
+  --grass: #5a9a52;
+  --water: #7cbfd9;
+  --pick: #e3f1f7;
+  --ok: #2f8a4c;
+  --ok-bg: #e4f4e8;
+  --no: #c0392b;
+  --no-bg: #fbe7e4;
+  --shadow: 0 10px 30px rgba(35, 50, 79, .10);
+  --font-display: "Jua", "Gowun Dodum", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --font-body: "Gowun Dodum", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14202e; --bg-deep: #0f1924; --card: #1d2b3c; --ink: #eef3f8; --ink-soft: #a9b8c9;
+    --line: #34465b; --accent: #4fb0d0; --accent-ink: #0f1924; --sun: #f2be55;
+    --wood: #c58a58; --wood-dark: #8f5d38; --red: #e06a5d; --grass: #74b46b; --water: #4f93ad;
+    --pick: #22405a; --ok: #6fd08f; --ok-bg: #1d3a2a; --no: #ff8a7c; --no-bg: #43231f;
+    --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14202e; --bg-deep: #0f1924; --card: #1d2b3c; --ink: #eef3f8; --ink-soft: #a9b8c9;
+  --line: #34465b; --accent: #4fb0d0; --accent-ink: #0f1924; --sun: #f2be55;
+  --wood: #c58a58; --wood-dark: #8f5d38; --red: #e06a5d; --grass: #74b46b; --water: #4f93ad;
+  --pick: #22405a; --ok: #6fd08f; --ok-bg: #1d3a2a; --no: #ff8a7c; --no-bg: #43231f;
+  --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; }
+html, body { min-height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.6;
+  padding-block: 28px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 640px; margin: 0 auto; }
+.card {
+  background: var(--card);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  padding: 28px clamp(18px, 5vw, 36px);
+  display: flex; flex-direction: column; gap: 20px;
+}
+h1, h2, .display { font-family: var(--font-display); font-weight: 400; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(30px, 7vw, 42px); line-height: 1.2; }
+h2 { font-size: clamp(22px, 5vw, 28px); line-height: 1.35; }
+p { margin: 0; }
+
+.btn {
+  font-family: var(--font-display);
+  font-size: 22px;
+  min-height: 60px;
+  padding: 10px 26px;
+  border-radius: 16px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform .12s ease, background-color .15s ease, opacity .15s ease;
+}
+.btn:active { transform: translateY(2px); }
+.btn:focus-visible, .choice:focus-visible { outline: 4px solid var(--sun); outline-offset: 3px; }
+.btn-main { background: var(--accent); color: var(--accent-ink); }
+.btn-sub { background: transparent; color: var(--accent); border-color: var(--accent); }
+.btn[disabled] { opacity: .4; cursor: not-allowed; transform: none; }
+.row { display: flex; gap: 12px; flex-wrap: wrap; }
+.row > .btn { flex: 1 1 160px; }
+
+/* 메인 */
+.hero-art { background: var(--bg-deep); border-radius: 18px; padding: 10px; }
+.hero-art svg { display: block; width: 100%; height: auto; }
+.ticket-tag {
+  align-self: flex-start;
+  font-family: var(--font-display);
+  font-size: 15px; letter-spacing: .06em;
+  color: var(--wood-dark); background: var(--sun);
+  padding: 4px 14px; border-radius: 999px;
+}
+:root[data-theme="dark"] .ticket-tag { color: #3a2512; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ticket-tag { color: #3a2512; } }
+.lead { font-size: 20px; color: var(--ink-soft); }
+.rules { display: flex; gap: 10px; flex-wrap: wrap; }
+.rules span {
+  font-size: 16px; padding: 6px 14px; border-radius: 999px;
+  background: var(--pick); color: var(--ink);
+}
+
+/* 문제 */
+.progress-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.qnum { font-family: var(--font-display); font-size: 22px; color: var(--accent); }
+.qcount { font-family: var(--font-display); font-size: 18px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.road { position: relative; height: 14px; border-radius: 999px; background: var(--line); overflow: visible; }
+.road-fill { position: absolute; inset: 0 auto 0 0; width: 20%; border-radius: 999px; background: var(--sun); transition: width .35s ease; }
+.road-dots { position: absolute; inset: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 3px; }
+.road-dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--card); opacity: .9; }
+.q-art { background: var(--bg-deep); border-radius: 18px; padding: 8px; display: flex; justify-content: center; }
+.q-art svg { width: 100%; max-width: 340px; height: auto; display: block; }
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 460px) { .choices { grid-template-columns: 1fr; } }
+.choice {
+  display: flex; align-items: center; gap: 12px;
+  min-height: 64px; padding: 10px 16px;
+  border-radius: 16px; border: 3px solid var(--line);
+  background: var(--card); color: var(--ink);
+  font-family: var(--font-body); font-size: 20px; text-align: left;
+  cursor: pointer; transition: border-color .15s, background-color .15s, transform .12s;
+}
+.choice:hover { border-color: var(--accent); }
+.choice:active { transform: scale(.98); }
+.choice .mark {
+  flex: none; width: 36px; height: 36px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: var(--font-display); font-size: 18px;
+  background: var(--pick); color: var(--accent);
+}
+.choice[aria-checked="true"] { border-color: var(--accent); background: var(--pick); }
+.choice[aria-checked="true"] .mark { background: var(--accent); color: var(--accent-ink); }
+.hint { font-size: 16px; color: var(--ink-soft); min-height: 1.6em; text-align: center; }
+
+/* 결과 */
+.center { text-align: center; align-items: center; }
+.score-ring { position: relative; width: 200px; height: 200px; max-width: 100%; }
+.score-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.score-ring .track { stroke: var(--line); }
+.score-ring .bar { stroke: var(--sun); transition: stroke-dashoffset 1s ease; }
+.score-num { position: absolute; inset: 0; display: grid; place-items: center; }
+.score-num b { font-family: var(--font-display); font-weight: 400; font-size: 64px; line-height: 1; font-variant-numeric: tabular-nums; }
+.score-num small { display: block; font-size: 16px; color: var(--ink-soft); margin-top: 4px; }
+.stamps { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.stamp {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: var(--font-display); font-size: 16px;
+  border: 3px solid;
+}
+.stamp.ok { color: var(--ok); border-color: var(--ok); background: var(--ok-bg); }
+.stamp.no { color: var(--no); border-color: var(--no); background: var(--no-bg); }
+.cheer { font-size: 20px; }
+
+/* 오답 */
+.review-list { display: flex; flex-direction: column; gap: 16px; }
+.review-item { border: 2px solid var(--line); border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.review-item .qlabel { font-family: var(--font-display); color: var(--accent); font-size: 18px; }
+.review-item .qtext { font-size: 19px; }
+.ans { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; font-size: 18px; }
+.ans b { font-family: var(--font-display); font-weight: 400; flex: none; }
+.ans.mine { background: var(--no-bg); color: var(--no); }
+.ans.right { background: var(--ok-bg); color: var(--ok); }
+.explain { font-size: 17px; color: var(--ink-soft); padding-left: 4px; }
+.explain::before { content: "도움말 · "; font-family: var(--font-display); color: var(--wood); }
+.perfect { text-align: center; font-size: 20px; padding: 20px 0; }
+
+/* 제출 확인 */
+.overlay {
+  position: fixed; inset: 0; z-index: 20;
+  background: rgba(15, 25, 36, .55);
+  display: grid; place-items: center;
+  padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px));
+}
+.dialog { background: var(--card); color: var(--ink); border-radius: 22px; padding: 28px 24px; max-width: 420px; width: 100%; display: flex; flex-direction: column; gap: 18px; text-align: center; box-shadow: var(--shadow); }
+
+/* 그림 공통 */
+.art .ink { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.art .f-wood { fill: var(--wood); }
+.art .f-wood-dark { fill: var(--wood-dark); }
+.art .f-red { fill: var(--red); }
+.art .f-sun { fill: var(--sun); }
+.art .f-card { fill: var(--card); }
+.art .f-grass { fill: var(--grass); }
+.art .f-water { fill: var(--water); }
+.art .f-ink { fill: var(--ink); }
+.art .none { fill: none; }
+
+.screen { animation: pop .3s ease both; }
+@keyframes pop { from { transform: translateY(8px); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .screen { animation: none; }
+  .road-fill, .score-ring .bar, .btn, .choice { transition: none; }
+}
+.foot { text-align: center; font-size: 14px; color: var(--ink-soft); margin-top: 18px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <!-- 메인 화면 -->
+  <section id="screen-main" class="card screen">
+    <span class="ticket-tag">초등 3학년 · 사회</span>
+    <h1>타고 타고<br>옛날 여행 퀴즈</h1>
+    <div class="hero-art" id="hero-art"></div>
+    <p class="lead">옛날 사람들은 무엇을 타고 다녔을까요?<br>문제 5개를 풀고 옛날 교통수단 박사가 되어 봐요!</p>
+    <div class="rules">
+      <span>문제 5개</span>
+      <span>보기 4개 중 1개 고르기</span>
+      <span>한 문제에 20점</span>
+    </div>
+    <button class="btn btn-main" id="btn-start" type="button">시작하기</button>
+  </section>
+
+  <!-- 문제 화면 -->
+  <section id="screen-quiz" class="card screen" hidden>
+    <div class="progress-top">
+      <span class="qnum" id="q-num">1번 문제</span>
+      <span class="qcount" id="q-count">1 / 5</span>
+    </div>
+    <div class="road" aria-hidden="true">
+      <div class="road-fill" id="road-fill"></div>
+      <div class="road-dots"><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+    <div class="q-art" id="q-art"></div>
+    <h2 id="q-text"></h2>
+    <div class="choices" id="choices" role="radiogroup" aria-labelledby="q-text"></div>
+    <p class="hint" id="hint" aria-live="polite"></p>
+    <div class="row">
+      <button class="btn btn-sub" id="btn-prev" type="button">이전</button>
+      <button class="btn btn-main" id="btn-next" type="button">다음</button>
+    </div>
+  </section>
+
+  <!-- 결과 화면 -->
+  <section id="screen-result" class="card screen center" hidden>
+    <span class="ticket-tag" style="align-self:center">여행 끝! 내 점수는?</span>
+    <div class="score-ring">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="12"></circle>
+        <circle class="bar" id="ring-bar" cx="60" cy="60" r="52" fill="none" stroke-width="12" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7"></circle>
+      </svg>
+      <div class="score-num"><div><b id="score">0</b><small>100점 만점</small></div></div>
+    </div>
+    <h2 id="score-text"></h2>
+    <div class="stamps" id="stamps"></div>
+    <p class="cheer" id="cheer"></p>
+    <div class="row" style="width:100%">
+      <button class="btn btn-main" id="btn-review" type="button">틀린 문제 확인하기</button>
+      <button class="btn btn-sub" id="btn-retry" type="button">다시 풀기</button>
+    </div>
+  </section>
+
+  <!-- 오답 확인 화면 -->
+  <section id="screen-review" class="card screen" hidden>
+    <h2>틀린 문제 다시 보기</h2>
+    <div class="review-list" id="review-list"></div>
+    <div class="row">
+      <button class="btn btn-sub" id="btn-back" type="button">결과로 돌아가기</button>
+      <button class="btn btn-main" id="btn-home" type="button">처음으로</button>
+    </div>
+  </section>
+
+  <p class="foot">옛날 사람들은 사람, 동물, 바람의 힘으로 이동했어요.</p>
+</div>
+
+<!-- 제출 확인 창 -->
+<div class="overlay" id="confirm" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+    <h2 id="confirm-title">정말 제출할까요?</h2>
+    <p>제출하면 점수가 나와요.<br>답을 다시 보고 싶으면 '더 볼래요'를 눌러요.</p>
+    <div class="row">
+      <button class="btn btn-sub" id="btn-cancel" type="button">더 볼래요</button>
+      <button class="btn btn-main" id="btn-confirm" type="button">제출하기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- 그림 (간단한 SVG) ----------
+const ART = {
+  gama: `<svg class="art" viewBox="0 0 220 130" role="img" aria-label="가마 그림">
+    <rect x="0" y="112" width="220" height="18" class="f-grass"/>
+    <rect x="8" y="80" width="204" height="8" rx="4" class="f-wood-dark"/>
+    <path d="M62 44 L110 16 L158 44 Z" class="f-red ink"/>
+    <rect x="70" y="44" width="80" height="58" rx="4" class="f-wood ink"/>
+    <rect x="88" y="56" width="44" height="28" rx="3" class="f-sun ink"/>
+    <line x1="110" y1="56" x2="110" y2="84" class="ink"/>
+    <line x1="80" y1="102" x2="80" y2="112" class="ink"/><line x1="140" y1="102" x2="140" y2="112" class="ink"/>
+  </svg>`,
+  cart: `<svg class="art" viewBox="0 0 220 130" role="img" aria-label="소달구지 그림">
+    <rect x="0" y="112" width="220" height="18" class="f-grass"/>
+    <rect x="112" y="56" width="96" height="30" rx="3" class="f-wood ink"/>
+    <rect x="122" y="40" width="30" height="18" rx="3" class="f-sun ink"/><rect x="156" y="36" width="34" height="22" rx="3" class="f-sun ink"/>
+    <line x1="112" y1="74" x2="72" y2="62" class="ink"/>
+    <circle cx="160" cy="92" r="20" class="f-card ink"/><circle cx="160" cy="92" r="4" class="f-ink"/>
+    <line x1="160" y1="72" x2="160" y2="112" class="ink"/><line x1="140" y1="92" x2="180" y2="92" class="ink"/>
+    <ellipse cx="58" cy="76" rx="34" ry="20" class="f-wood-dark ink"/>
+    <circle cx="24" cy="66" r="13" class="f-wood-dark ink"/>
+    <path d="M16 55 Q12 46 18 44 M32 55 Q36 46 30 44" class="none ink"/>
+    <line x1="36" y1="92" x2="36" y2="112" class="ink"/><line x1="48" y1="94" x2="48" y2="112" class="ink"/>
+    <line x1="72" y1="94" x2="72" y2="112" class="ink"/><line x1="84" y1="92" x2="84" y2="112" class="ink"/>
+  </svg>`,
+  sail: `<svg class="art" viewBox="0 0 220 130" role="img" aria-label="돛단배 그림">
+    <circle cx="190" cy="26" r="14" class="f-sun"/>
+    <rect x="0" y="96" width="220" height="34" class="f-water"/>
+    <line x1="110" y1="18" x2="110" y2="88" class="ink"/>
+    <path d="M114 22 L114 82 L168 82 Z" class="f-card ink"/>
+    <path d="M106 30 L106 82 L66 82 Z" class="f-sun ink"/>
+    <path d="M52 88 L168 88 L152 106 L68 106 Z" class="f-wood ink"/>
+    <path d="M10 118 q10 -8 20 0 t20 0 t20 0 M150 118 q10 -8 20 0 t20 0 t20 0" class="none ink"/>
+  </svg>`,
+  raft: `<svg class="art" viewBox="0 0 220 130" role="img" aria-label="뗏목 그림">
+    <rect x="0" y="88" width="220" height="42" class="f-water"/>
+    <line x1="150" y1="20" x2="128" y2="104" class="ink"/>
+    <rect x="34" y="72" width="152" height="12" rx="6" class="f-wood ink"/>
+    <rect x="34" y="84" width="152" height="12" rx="6" class="f-wood-dark ink"/>
+    <rect x="34" y="96" width="152" height="12" rx="6" class="f-wood ink"/>
+    <line x1="60" y1="70" x2="60" y2="110" class="ink"/><line x1="160" y1="70" x2="160" y2="110" class="ink"/>
+    <path d="M14 120 q10 -8 20 0 t20 0 M170 120 q10 -8 20 0 t20 0" class="none ink"/>
+  </svg>`,
+  rickshaw: `<svg class="art" viewBox="0 0 220 130" role="img" aria-label="인력거 그림">
+    <rect x="0" y="112" width="220" height="18" class="f-grass"/>
+    <path d="M60 30 Q60 18 80 18 L120 18 Q132 18 132 30 L132 40 L60 40 Z" class="f-red ink"/>
+    <line x1="64" y1="40" x2="64" y2="62" class="ink"/>
+    <path d="M58 62 L132 62 L132 78 L70 78 Z" class="f-sun ink"/>
+    <rect x="64" y="46" width="12" height="18" rx="3" class="f-wood ink"/>
+    <line x1="132" y1="70" x2="206" y2="76" class="ink"/>
+    <circle cx="96" cy="88" r="24" class="f-card ink"/><circle cx="96" cy="88" r="4" class="f-ink"/>
+    <line x1="96" y1="64" x2="96" y2="112" class="ink"/><line x1="72" y1="88" x2="120" y2="88" class="ink"/>
+    <line x1="79" y1="71" x2="113" y2="105" class="ink"/><line x1="113" y1="71" x2="79" y2="105" class="ink"/>
+  </svg>`
+};
+
+// ---------- 문제 데이터 ----------
+const QUESTIONS = [
+  { art: "gama",
+    question: "옛날에 여러 사람이 어깨에 메고 다니던, 사람이 안에 타는 교통수단은 무엇일까요?",
+    choices: ["자전거", "가마", "버스", "썰매"], answer: 1,
+    explain: "가마는 여러 사람이 메고 옮겼어요. 결혼식 날 신부가 타기도 했어요." },
+  { art: "cart",
+    question: "옛날에 무거운 짐을 싣고 다닐 때, 소가 끌던 수레는 무엇일까요?",
+    choices: ["소달구지", "기차", "트럭", "인력거"], answer: 0,
+    explain: "소달구지는 힘센 소가 끌어서 무거운 짐을 날랐어요." },
+  { art: "sail",
+    question: "바람의 힘을 이용해 물 위를 나아가던 배는 무엇일까요?",
+    choices: ["잠수함", "유람선", "돛단배", "모터보트"], answer: 2,
+    explain: "돛단배는 넓은 천(돛)으로 바람을 받아서 움직였어요." },
+  { art: "raft",
+    question: "옛날에 통나무를 여러 개 묶어서 만든, 물에 띄워 타던 것은 무엇일까요?",
+    choices: ["비행기", "뗏목", "가마", "자동차"], answer: 1,
+    explain: "뗏목은 통나무를 줄로 묶어 만들었어요. 강을 건너거나 나무를 옮길 때 썼어요." },
+  { art: "rickshaw",
+    question: "옛날에 사람이 직접 끌면서 손님을 태워 주던, 바퀴 두 개 달린 수레는 무엇일까요?",
+    choices: ["택시", "소달구지", "지하철", "인력거"], answer: 3,
+    explain: "인력거는 '사람의 힘으로 끄는 수레'라는 뜻이에요." }
+];
+const MARKS = ["①", "②", "③", "④"];
+const POINT = 100 / QUESTIONS.length;
+
+// ---------- 상태 ----------
+let current = 0;
+let answers = new Array(QUESTIONS.length).fill(null);
+
+const $ = (id) => document.getElementById(id);
+const screens = ["main", "quiz", "result", "review"];
+function show(name) {
+  screens.forEach((s) => { $("screen-" + s).hidden = s !== name; });
+  window.scrollTo({ top: 0 });
+}
+
+$("hero-art").innerHTML = ART.cart;
+
+// ---------- 문제 그리기 ----------
+function renderQuestion() {
+  const q = QUESTIONS[current];
+  const total = QUESTIONS.length;
+  $("q-num").textContent = `${current + 1}번 문제`;
+  $("q-count").textContent = `${current + 1} / ${total}`;
+  $("road-fill").style.width = `${((current + 1) / total) * 100}%`;
+  $("q-art").innerHTML = ART[q.art];
+  $("q-text").textContent = q.question;
+  $("hint").textContent = "";
+
+  const box = $("choices");
+  box.innerHTML = "";
+  q.choices.forEach((text, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "choice";
+    b.id = `choice-${current}-${i}`;
+    b.setAttribute("role", "radio");
+    b.setAttribute("aria-checked", answers[current] === i ? "true" : "false");
+    b.innerHTML = `<span class="mark">${MARKS[i]}</span><span></span>`;
+    b.lastChild.textContent = text;
+    b.addEventListener("click", () => {
+      answers[current] = i;
+      box.querySelectorAll(".choice").forEach((c, j) => c.setAttribute("aria-checked", j === i ? "true" : "false"));
+      $("hint").textContent = "";
+      updateNav();
+    });
+    box.appendChild(b);
+  });
+  updateNav();
+}
+
+function updateNav() {
+  const last = current === QUESTIONS.length - 1;
+  $("btn-prev").hidden = current === 0;
+  $("btn-next").textContent = last ? "최종 제출" : "다음";
+  $("btn-next").classList.toggle("is-picked", answers[current] !== null);
+}
+
+// ---------- 채점 ----------
+function grade() {
+  const correct = answers.filter((a, i) => a === QUESTIONS[i].answer).length;
+  return { correct, score: Math.round(correct * POINT) };
+}
+
+function showResult() {
+  const { correct, score } = grade();
+  const total = QUESTIONS.length;
+  show("result");
+  $("score-text").textContent = `${total}문제 중 ${correct}문제를 맞혔어요!`;
+  $("cheer").textContent =
+    score === 100 ? "와! 옛날 교통수단 박사예요!" :
+    score >= 60 ? "아주 잘했어요! 틀린 문제를 확인하고 한 번 더 알아봐요." :
+    "괜찮아요! 틀린 문제를 보고 다시 한번 도전해 봐요.";
+
+  $("stamps").innerHTML = "";
+  QUESTIONS.forEach((q, i) => {
+    const ok = answers[i] === q.answer;
+    const s = document.createElement("span");
+    s.className = "stamp " + (ok ? "ok" : "no");
+    s.textContent = `${i + 1}${ok ? "○" : "×"}`;
+    s.setAttribute("aria-label", `${i + 1}번 ${ok ? "정답" : "오답"}`);
+    $("stamps").appendChild(s);
+  });
+
+  $("btn-review").textContent = correct === total ? "문제 다시 보기" : "틀린 문제 확인하기";
+
+  // 점수 올라가는 효과
+  const ring = $("ring-bar");
+  const full = 326.7;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  ring.style.strokeDashoffset = full;
+  requestAnimationFrame(() => { ring.style.strokeDashoffset = full * (1 - score / 100); });
+  if (reduce) { $("score").textContent = score; return; }
+  const start = performance.now();
+  const dur = 900;
+  setTimeout(() => { $("score").textContent = score; ring.style.strokeDashoffset = full * (1 - score / 100); }, dur + 200);
+  (function tick(now) {
+    const t = Math.min(1, (now - start) / dur);
+    $("score").textContent = Math.round(score * t);
+    if (t < 1) requestAnimationFrame(tick);
+  })(start);
+}
+
+// ---------- 오답 확인 ----------
+function showReview() {
+  const list = $("review-list");
+  list.innerHTML = "";
+  const wrong = QUESTIONS.map((q, i) => ({ q, i })).filter(({ q, i }) => answers[i] !== q.answer);
+  if (wrong.length === 0) {
+    list.innerHTML = `<p class="perfect">틀린 문제가 없어요! 모두 맞혔어요. 최고예요!</p>`;
+  }
+  wrong.forEach(({ q, i }) => {
+    const item = document.createElement("article");
+    item.className = "review-item";
+    item.innerHTML = `
+      <span class="qlabel">${i + 1}번 문제</span>
+      <p class="qtext"></p>
+      <div class="ans mine"><b>× 내가 고른 답</b><span class="v1"></span></div>
+      <div class="ans right"><b>○ 정답</b><span class="v2"></span></div>
+      <p class="explain"></p>`;
+    item.querySelector(".qtext").textContent = q.question;
+    item.querySelector(".v1").textContent = `${MARKS[answers[i]]} ${q.choices[answers[i]]}`;
+    item.querySelector(".v2").textContent = `${MARKS[q.answer]} ${q.choices[q.answer]}`;
+    item.querySelector(".explain").textContent = q.explain;
+    list.appendChild(item);
+  });
+  show("review");
+}
+
+// ---------- 버튼 연결 ----------
+function startQuiz() {
+  current = 0;
+  answers = new Array(QUESTIONS.length).fill(null);
+  show("quiz");
+  renderQuestion();
+}
+$("btn-start").addEventListener("click", startQuiz);
+$("btn-retry").addEventListener("click", startQuiz);
+$("btn-home").addEventListener("click", () => show("main"));
+$("btn-back").addEventListener("click", () => show("result"));
+$("btn-review").addEventListener("click", showReview);
+
+$("btn-prev").addEventListener("click", () => {
+  if (current > 0) { current--; renderQuestion(); }
+});
+$("btn-next").addEventListener("click", () => {
+  if (answers[current] === null) {
+    $("hint").textContent = "답을 하나 골라 주세요!";
+    return;
+  }
+  if (current < QUESTIONS.length - 1) {
+    current++;
+    renderQuestion();
+  } else {
+    $("confirm").hidden = false;
+    $("btn-confirm").focus();
+  }
+});
+$("btn-cancel").addEventListener("click", () => { $("confirm").hidden = true; $("btn-next").focus(); });
+$("btn-confirm").addEventListener("click", () => { $("confirm").hidden = true; showResult(); });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !$("confirm").hidden) { $("confirm").hidden = true; }
+});
+</script>
+</body>
+</html>
