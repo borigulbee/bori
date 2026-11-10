@@ -120,6 +120,9 @@ p { margin: 0; }
 .progress-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .qnum { font-family: var(--font-display); font-size: 22px; color: var(--accent); }
 .qcount { font-family: var(--font-display); font-size: 18px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.qhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.era { font-family: var(--font-display); font-size: 15px; padding: 2px 12px; border-radius: 999px; background: var(--wood); color: var(--card); }
+.era.now { background: var(--accent); color: var(--accent-ink); }
 .road { position: relative; height: 14px; border-radius: 999px; background: var(--line); overflow: visible; }
 .road-fill { position: absolute; inset: 0 auto 0 0; width: 20%; border-radius: 999px; background: var(--sun); transition: width .35s ease; }
 .road-dots { position: absolute; inset: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 3px; }
@@ -219,11 +222,11 @@ p { margin: 0; }
     <span class="ticket-tag">초등 3학년 · 사회</span>
     <h1>타고 타고<br>옛날 여행 퀴즈</h1>
     <div class="hero-art" id="hero-art"></div>
-    <p class="lead">옛날 사람들은 무엇을 타고 다녔을까요?<br>문제 5개를 풀고 옛날 교통수단 박사가 되어 봐요!</p>
+    <p class="lead">옛날 사람들은 무엇을 타고 다녔을까요? 오늘날에는 무엇을 탈까요?<br>문제를 풀고 교통수단 박사가 되어 봐요!</p>
     <div class="rules">
-      <span>문제 5개</span>
+      <span id="rule-count">문제 10개</span>
       <span>보기 4개 중 1개 고르기</span>
-      <span>한 문제에 20점</span>
+      <span id="rule-point">한 문제에 10점</span>
     </div>
     <button class="btn btn-main" id="btn-start" type="button">시작하기</button>
   </section>
@@ -231,12 +234,12 @@ p { margin: 0; }
   <!-- 문제 화면 -->
   <section id="screen-quiz" class="card screen" hidden>
     <div class="progress-top">
-      <span class="qnum" id="q-num">1번 문제</span>
+      <span class="qhead"><span class="qnum" id="q-num">1번 문제</span><span class="era" id="q-era">옛날</span></span>
       <span class="qcount" id="q-count">1 / 5</span>
     </div>
     <div class="road" aria-hidden="true">
       <div class="road-fill" id="road-fill"></div>
-      <div class="road-dots"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="road-dots" id="road-dots"></div>
     </div>
     <div class="q-art" id="q-art"></div>
     <h2 id="q-text"></h2>
@@ -277,7 +280,7 @@ p { margin: 0; }
     </div>
   </section>
 
-  <p class="foot">옛날 사람들은 사람, 동물, 바람의 힘으로 이동했어요.</p>
+  <p class="foot">옛날에는 사람, 동물, 바람의 힘으로, 오늘날에는 기계의 힘으로 이동해요.</p>
 </div>
 
 <!-- 제출 확인 창 -->
@@ -345,6 +348,48 @@ const ART = {
     <circle cx="96" cy="88" r="24" class="f-card ink"/><circle cx="96" cy="88" r="4" class="f-ink"/>
     <line x1="96" y1="64" x2="96" y2="112" class="ink"/><line x1="72" y1="88" x2="120" y2="88" class="ink"/>
     <line x1="79" y1="71" x2="113" y2="105" class="ink"/><line x1="113" y1="71" x2="79" y2="105" class="ink"/>
+  </svg>`,
+  plane: `<svg class="art" viewBox="0 0 220 130" role="img" aria-label="비행기 그림">
+    <ellipse cx="44" cy="30" rx="26" ry="10" class="f-card"/><ellipse cx="176" cy="104" rx="30" ry="11" class="f-card"/>
+    <path d="M46 52 L30 24 L46 24 L68 52 Z" class="f-red ink"/>
+    <path d="M30 62 Q30 52 46 52 L166 52 Q196 54 202 62 Q196 70 166 72 L46 72 Q30 72 30 62 Z" class="f-card ink"/>
+    <circle cx="90" cy="60" r="4" class="f-water"/><circle cx="106" cy="60" r="4" class="f-water"/><circle cx="122" cy="60" r="4" class="f-water"/><circle cx="138" cy="60" r="4" class="f-water"/>
+    <path d="M96 66 L74 104 L94 104 L128 66 Z" class="f-red ink"/>
+  </svg>`,
+  subway: `<svg class="art" viewBox="0 0 220 130" role="img" aria-label="지하철 그림">
+    <rect x="0" y="0" width="220" height="22" class="f-grass"/>
+    <rect x="0" y="22" width="220" height="108" class="f-wood-dark" opacity=".35"/>
+    <path d="M20 112 L20 60 Q20 34 110 34 Q200 34 200 60 L200 112 Z" class="f-ink" opacity=".25"/>
+    <rect x="34" y="52" width="152" height="52" rx="10" class="f-sun ink"/>
+    <rect x="46" y="62" width="26" height="20" rx="3" class="f-card ink"/><rect x="80" y="62" width="26" height="20" rx="3" class="f-card ink"/>
+    <rect x="114" y="62" width="26" height="20" rx="3" class="f-card ink"/><rect x="148" y="62" width="26" height="20" rx="3" class="f-card ink"/>
+    <line x1="10" y1="112" x2="210" y2="112" class="ink"/>
+  </svg>`,
+  ktx: `<svg class="art" viewBox="0 0 220 130" role="img" aria-label="고속 열차 그림">
+    <path d="M12 92 L150 92 Q204 92 208 80 Q192 48 146 48 L12 48 Z" class="f-card ink"/>
+    <path d="M12 74 L196 74 Q200 80 204 84 L12 84 Z" class="f-red"/>
+    <path d="M150 56 Q178 56 190 70 L150 70 Z" class="f-water ink"/>
+    <rect x="30" y="56" width="24" height="12" rx="2" class="f-water"/><rect x="64" y="56" width="24" height="12" rx="2" class="f-water"/><rect x="98" y="56" width="24" height="12" rx="2" class="f-water"/>
+    <line x1="4" y1="104" x2="216" y2="104" class="ink"/>
+    <path d="M14 30 L60 30 M30 20 L80 20" class="none ink" opacity=".5"/>
+  </svg>`,
+  bus: `<svg class="art" viewBox="0 0 220 130" role="img" aria-label="버스 그림">
+    <rect x="0" y="108" width="220" height="22" class="f-ink" opacity=".2"/>
+    <rect x="22" y="34" width="176" height="64" rx="12" class="f-grass ink"/>
+    <rect x="36" y="44" width="28" height="22" rx="3" class="f-card ink"/><rect x="72" y="44" width="28" height="22" rx="3" class="f-card ink"/>
+    <rect x="108" y="44" width="28" height="22" rx="3" class="f-card ink"/>
+    <rect x="148" y="44" width="34" height="48" rx="3" class="f-water ink"/>
+    <circle cx="62" cy="100" r="13" class="f-ink"/><circle cx="160" cy="100" r="13" class="f-ink"/>
+    <circle cx="62" cy="100" r="5" class="f-card"/><circle cx="160" cy="100" r="5" class="f-card"/>
+  </svg>`,
+  compare: `<svg class="art" viewBox="0 0 220 130" role="img" aria-label="소달구지에서 자동차로 바뀐 그림">
+    <rect x="0" y="108" width="220" height="22" class="f-grass"/>
+    <rect x="16" y="60" width="54" height="22" rx="3" class="f-wood ink"/>
+    <circle cx="43" cy="92" r="16" class="f-card ink"/><line x1="43" y1="76" x2="43" y2="108" class="ink"/><line x1="27" y1="92" x2="59" y2="92" class="ink"/>
+    <path d="M86 70 L126 70 M114 58 L128 70 L114 82" class="none ink"/>
+    <path d="M142 90 L142 74 L158 74 L168 58 L196 58 L206 74 L210 74 L210 90 Z" class="f-red ink"/>
+    <rect x="170" y="62" width="22" height="12" rx="2" class="f-card"/>
+    <circle cx="158" cy="94" r="10" class="f-ink"/><circle cx="196" cy="94" r="10" class="f-ink"/>
   </svg>`
 };
 
@@ -369,8 +414,30 @@ const QUESTIONS = [
   { art: "rickshaw",
     question: "옛날에 사람이 직접 끌면서 손님을 태워 주던, 바퀴 두 개 달린 수레는 무엇일까요?",
     choices: ["택시", "소달구지", "지하철", "인력거"], answer: 3,
-    explain: "인력거는 '사람의 힘으로 끄는 수레'라는 뜻이에요." }
+    explain: "인력거는 '사람의 힘으로 끄는 수레'라는 뜻이에요." },
+  { art: "plane", era: "now",
+    question: "하늘을 날아서 먼 나라까지 빠르게 갈 수 있는 오늘날의 교통수단은 무엇일까요?",
+    choices: ["가마", "비행기", "뗏목", "소달구지"], answer: 1,
+    explain: "비행기를 타면 배로 여러 날 걸리던 먼 나라에도 하루 안에 갈 수 있어요." },
+  { art: "subway", era: "now",
+    question: "땅속에 만든 길로 다니며, 많은 사람을 한꺼번에 태우는 교통수단은 무엇일까요?",
+    choices: ["돛단배", "인력거", "지하철", "자전거"], answer: 2,
+    explain: "지하철은 땅속으로 다녀서 길이 막히지 않고, 큰 도시에서 많은 사람을 태워요." },
+  { art: "ktx", era: "now",
+    question: "전기의 힘으로 아주 빠르게 달려서, 먼 도시까지 몇 시간 만에 가는 기차는 무엇일까요?",
+    choices: ["고속 열차", "소달구지", "가마", "뗏목"], answer: 0,
+    explain: "고속 열차(KTX)는 서울에서 부산까지 3시간도 걸리지 않아요." },
+  { art: "bus", era: "now",
+    question: "정해진 길을 따라 여러 정류장에 멈추며 많은 사람을 태우는 자동차는 무엇일까요?",
+    choices: ["가마", "트랙터", "인력거", "버스"], answer: 3,
+    explain: "버스는 정류장마다 서서 사람들이 타고 내릴 수 있어요." },
+  { art: "compare", era: "now",
+    question: "옛날 교통수단과 비교했을 때, 오늘날 교통수단의 좋은 점으로 알맞은 것은 무엇일까요?",
+    choices: ["더 느리게 움직여요", "동물의 힘으로만 움직여요", "더 빠르고 많은 사람과 짐을 실어 날라요", "사람이 어깨에 메고 다녀요"], answer: 2,
+    explain: "오늘날에는 기계의 힘으로 움직여서, 옛날보다 더 빠르고 많이 실어 나를 수 있어요." }
 ];
+QUESTIONS.forEach((q) => { if (!q.era) q.era = "old"; });
+const ERA_LABEL = { old: "옛날", now: "오늘날" };
 const MARKS = ["①", "②", "③", "④"];
 const POINT = 100 / QUESTIONS.length;
 
@@ -385,7 +452,10 @@ function show(name) {
   window.scrollTo({ top: 0 });
 }
 
-$("hero-art").innerHTML = ART.cart;
+$("hero-art").innerHTML = ART.compare;
+$("rule-count").textContent = `문제 ${QUESTIONS.length}개`;
+$("rule-point").textContent = `한 문제에 ${POINT}점`;
+$("road-dots").innerHTML = "<i></i>".repeat(QUESTIONS.length);
 
 // ---------- 문제 그리기 ----------
 function renderQuestion() {
@@ -393,6 +463,8 @@ function renderQuestion() {
   const total = QUESTIONS.length;
   $("q-num").textContent = `${current + 1}번 문제`;
   $("q-count").textContent = `${current + 1} / ${total}`;
+  $("q-era").textContent = ERA_LABEL[q.era];
+  $("q-era").className = "era " + q.era;
   $("road-fill").style.width = `${((current + 1) / total) * 100}%`;
   $("q-art").innerHTML = ART[q.art];
   $("q-text").textContent = q.question;
@@ -439,7 +511,7 @@ function showResult() {
   show("result");
   $("score-text").textContent = `${total}문제 중 ${correct}문제를 맞혔어요!`;
   $("cheer").textContent =
-    score === 100 ? "와! 옛날 교통수단 박사예요!" :
+    score === 100 ? "와! 교통수단 박사예요!" :
     score >= 60 ? "아주 잘했어요! 틀린 문제를 확인하고 한 번 더 알아봐요." :
     "괜찮아요! 틀린 문제를 보고 다시 한번 도전해 봐요.";
 
